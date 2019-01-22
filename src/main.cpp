@@ -8,6 +8,8 @@
 #include <WiFiUdp.h>
 #include <WiFipwd.h>
 
+#include <wordclock.h>
+
 // The display
 SSD1306  display(0x3c, 21, 22);
 
