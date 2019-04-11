@@ -44,3 +44,20 @@ uint16_t mask[10];
 #define ZEHN_2          mask[9] |= 0b1111000000000000
 #define NEUN            mask[9] |= 0b0001111000000000
 #define UHR             mask[9] |= 0b0000000011100000
+
+/*
+/////////////////////////////////////
+// set matrix
+void setPanel() {
+  for (int i = 0; i <= 9; i++) { // row
+    for (int j = 0; j <= 15; j++) { // column
+      x = bitRead(mask[i], 15 - j);
+      if (x == 1) {
+        PanelStrip.SetPixelColor(topo(j,i),RgbwColor(255,0,0,0))
+      }
+      else {
+        PanelStrip.SetPixelColor(topo(j,i),RgbwColor(0,0,0,0))
+      }
+    }
+  }
+}*/
