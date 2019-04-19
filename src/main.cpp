@@ -1,58 +1,4 @@
-#include <Arduino.h>
-#include <wire.h>
-#include "SSD1306.h"
-#include <wc_font.h>
-
-#include <NeoPixelBus.h>
-
-#include <NTP.h>
-#include <WiFi.h>
-#include <WiFiUdp.h>
-#include <WiFipwd.h>
-
-#include <wordclock.h>
-
-// The display
-SSD1306  display(0x3c, 21, 22);
-
-////
-// in WiFipwd.h
-//const char *ssid     = "ssid";
-//const char *password = "password";
-////
-WiFiUDP ntpUDP;
-NTP ntp(ntpUDP);
-
-// Char LEDs (Matrix)
-const uint8_t PanelWidth = 11;
-const uint8_t PanelHeight = 10;
-const uint16_t PanelPixelCount = PanelWidth * PanelHeight;
-const uint8_t PanelPixelPin = 18;
-NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
-NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount, PanelPixelPin);
-
-// Other LEDs (minutes 1-4, 8 touch keys)
-const uint16_t OtherPixelCount = 12;
-const uint8_t OtherPixelPin = 19;
-NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> OtherStrip(PanelPixelCount, PanelPixelPin);
-
-// brightness
-const uint8_t LDRPin = A0;
-uint8_t minBrightness = 10;
-uint8_t maxBrightness = 255;
-
-// switches
-const uint8_t Sw1Pin = 39;
-const uint8_t Sw2Pin = 34;
-const uint8_t Sw3Pin = 35;
-const uint8_t Sw4Pin = 32;
-const uint8_t Sw5Pin = 33;
-const uint8_t Sw6Pin = 25;
-const uint8_t Sw7Pin = 26;
-const uint8_t Sw8Pin = 27;
-
-
-uint8_t oldt = 255; // store second value for refresh
+#include "main.h"
 
 void setup() {
  
@@ -72,12 +18,21 @@ void setup() {
   pinMode(Sw8Pin,INPUT);
   pinMode(LDRPin,INPUT);
 
+  display.clear();
+  display.drawString(0, 0, "Pixel Test ...");
+  display.display();
   PanelStrip.Begin();
   PanelStrip.ClearTo(RgbwColor(0,0,0,255));
   PanelStrip.Show();
-  OtherStrip.Begin();
-  OtherStrip.ClearTo(RgbwColor(0,0,0,255));
-  OtherStrip.Show();
+  MinutesStrip.Begin();
+  MinutesStrip.ClearTo(RgbwColor(0,0,0,255));
+  MinutesStrip.Show();
+
+  //Test
+  delay(1000);
+  PixelColorWheel(&PanelStrip,10);
+  PixelColorWheel(&MinutesStrip,100);
+  //EndTest
 
   WiFi.begin(ssid, password);
 
@@ -98,74 +53,287 @@ void setup() {
   ntp.ruleDST("CEST", Last, Sun, Mar, 2, 120); // last sunday in march 2:00, timetone +120min (+1 GMT + 1h summertime offset)
   ntp.ruleSTD("CET", Last, Sun, Oct, 3, 60); // last sunday in october 3:00, timezone +60min (+1 GMT)
   ntp.begin();
-
-
 }
-
-uint8_t ff=0;
-int bright=0;
 
 void loop() {
 
   if(ntp.seconds() != oldt) {
-    bright = analogRead(A0);
+    currentBright = (int)((4096.0-analogRead(A0))/4096.0*255.0);
     ntp.update();
 
     display.clear();
     //display.setFont(Monospaced_bold_28);
     display.setFont(Monospaced_bold_16);
     display.drawString(0, 0, ntp.formattedTime("%T"));
-    //display.setFont(Monospaced_bold_16);
-    //display.drawString(0, 20, ntp.formattedTime("%F"));
-    display.drawString(0, 20, String(bright));
+    display.drawString(0, 20, ntp.formattedTime("%F"));
+    
+    display.setFont(Monospaced_bold_10);
+    display.drawString(0, 40, String(currentBright));
     if(digitalRead(Sw1Pin)) {
-      display.drawString(0,40,"1");
+      display.drawString(0,50,"1");
     }
     if(digitalRead(Sw2Pin)) {
-      display.drawString(10,40,"2");
+      display.drawString(10,50,"2");
     }
     if(digitalRead(Sw3Pin)) {
-      display.drawString(20,40,"3");
+      display.drawString(20,50,"3");
     }
     if(digitalRead(Sw4Pin)) {
-      display.drawString(30,40,"4");
+      display.drawString(30,50,"4");
     }
     if(digitalRead(Sw5Pin)) {
-      display.drawString(40,40,"5");
+      display.drawString(40,50,"5");
     }
     if(digitalRead(Sw6Pin)) {
-      display.drawString(50,40,"6");
+      display.drawString(50,50,"6");
     }
     if(digitalRead(Sw7Pin)) {
-      display.drawString(60,40,"7");
+      display.drawString(60,50,"7");
     }
     if(digitalRead(Sw8Pin)) {
-      display.drawString(70,40,"8");
+      display.drawString(70,50,"8");
     }
     display.display();
-    oldt = ntp.seconds();
 
-    if(ff == 0) {
-      PanelStrip.SetPixelColor(0, RgbwColor(255,0,0,0));
-      PanelStrip.SetPixelColor(1, RgbwColor(0,255,0,0));
-      PanelStrip.SetPixelColor(2, RgbwColor(0,0,255,0));
-      PanelStrip.SetPixelColor(3, RgbwColor(255,0,0,255));
-      PanelStrip.SetPixelColor(4, RgbwColor(0,255,0,255));
-      PanelStrip.SetPixelColor(5, RgbwColor(0,0,255,255));
-      PanelStrip.SetPixelColor(6, RgbwColor(255,255,255,255));
-      PanelStrip.Show();
-      ff=1;
+    setPixels();
+    PanelStrip.Show();
+    MinutesStrip.Show();
+
+    oldt = ntp.seconds();
+  }
+}
+
+/////////////////////////////////////
+// set all Pixels
+void setPixels() {
+    getTimeText();
+    getMinutesText();
+    setPanelPixel();
+    setMinutesPixel();
+}
+
+/////////////////////////////////////
+// set Pixels for PanelStrip from panelMask
+void setPanelPixel() {
+  uint8_t x=0;
+  for (int i = 0; i <= 9; i++) { // row
+    for (int j = 0; j <= 15; j++) { // column
+      x = bitRead(panelMask[i], 15 - j);
+      if (x == 1) {
+        PanelStrip.SetPixelColor(topo.Map(j,i),RgbwColor(255,0,0,0));
+      }
+      else {
+        PanelStrip.SetPixelColor(topo.Map(j,i),RgbwColor(0,0,0,0));
+      }
+    }
+  }
+}
+
+/////////////////////////////////////
+// set Pixels for OtherStrip from otherMask
+void setMinutesPixel() {
+  uint8_t x=0;
+  for (int j = 0; j <= 3; j++) { 
+    x = bitRead(minutesMask, 8 - j);
+    if (x == 1) {
+      MinutesStrip.SetPixelColor(j,RgbwColor(255,0,0,0));
     }
     else {
-      PanelStrip.SetPixelColor(0, RgbwColor(0,0,0,0));
-      PanelStrip.SetPixelColor(1, RgbwColor(0,0,0,0));
-      PanelStrip.SetPixelColor(2, RgbwColor(0,0,0,0));
-      PanelStrip.SetPixelColor(3, RgbwColor(0,0,0,0));
-      PanelStrip.SetPixelColor(4, RgbwColor(0,0,0,0));
-      PanelStrip.SetPixelColor(5, RgbwColor(0,0,0,0));
-      PanelStrip.SetPixelColor(6, RgbwColor(0,0,0,0));
-      PanelStrip.Show();
-      ff=0;
+      MinutesStrip.SetPixelColor(j,RgbwColor(0,0,0,0));
     }
+  }
+}
+
+/////////////////////////////////////
+// hours text
+void HourText(uint8_t h) {
+  if (h < 100) { // >=100 special cases
+    h %= 12;
+  }
+  switch (h) {
+    case 0:
+    case 12:
+      ZWOLF;
+      break;
+    case 1:
+      EINS;
+      break;
+    case 2:
+      ZWEI;
+      break;
+    case 3:
+      DREI_2;
+      break;
+    case 4:
+      VIER_2;
+      break;
+    case 5:
+      FUNF_2;
+      break;
+    case 6:
+      SECHS;
+      break;
+    case 7:
+      SIEBEN;
+      break;
+    case 8:
+      ACHT;
+      break;
+    case 9:
+      NEUN;
+      break;
+    case 10:
+      ZEHN_2;
+      break;
+    case 11:
+      ELF;
+      break;
+    // specail cases
+    case 100:
+      EIN;
+      break;
+  }
+}
+
+/////////////////////////////////////
+// get time and set panelMask
+void getTimeText() {
+  // panelMask-lines reset
+  for (uint8_t i = 0; i < 10; i++) {
+    panelMask[i] = 0;
+  }
+
+  // ES IST
+  ES;
+  IST_1;
+
+  if (ntp.minutes() < 5) {
+    HourText(ntp.hours() == 1 ? 100 : ntp.hours() ); // "Es ist Ein Uhr" (nicht: "Es ist Eins Uhr" ;-)
+    UHR;
+  }
+  else if (ntp.minutes() < 10) {
+    //00:05	Es ist fünf[0] nach xx
+    FUNF_1;
+    NACH_1;
+    HourText(ntp.hours());
+  }
+  else if (ntp.minutes() < 15) {
+    //00:10	Es ist zehn[1] nach xx
+    ZEHN_1;
+    NACH_1;
+    HourText(ntp.hours());
+  }
+  else if (ntp.minutes() < 20) {
+    //00:15	Es ist viertel nach xx
+    VIERTEL;
+    NACH_1;
+    HourText(ntp.hours());
+  }
+  else if (ntp.minutes() < 25) {
+    //00:20	Es ist zwanzig nach xx
+    ZWANZIG;
+    NACH_1;
+    HourText(ntp.hours());
+  }
+  else if (ntp.minutes() < 30) {
+    //00:25	Es ist fünf[0] vor halb xx+1
+    FUNF_1;
+    VOR;
+    HALB;
+    HourText(ntp.hours() + 1);
+  }
+  else if (ntp.minutes() < 35) {
+    //00:30	Es ist halb xx+1
+    HALB;
+    HourText(ntp.hours() + 1);
+  }
+  else if (ntp.minutes() < 40) {
+    //00:35	Es ist fünf[0] nach halb xx+1
+    FUNF_1;
+    NACH_1;
+    HALB;
+    HourText(ntp.hours() + 1);
+  }
+  else if (ntp.minutes() < 45) {
+    //00:40	Es ist zwanzig vor xx+1
+    ZWANZIG;
+    VOR;
+    HourText(ntp.hours() + 1);
+  }
+  else if (ntp.minutes() < 50) {
+    //00:45	Es ist viertel vor xx+1
+    //		Es ist dreiviertel xx+1
+    if ((int)random(2) == 0) {
+      VIERTEL;
+      VOR;
+      HourText(ntp.hours() + 1);
+    }
+    else {
+      DREIVIERTEL;
+      HourText(ntp.hours() + 1);
+    }
+  }
+  else if (ntp.minutes() < 55) {
+    //00:50	Es ist zehn[1] vor xx+1
+    ZEHN_1;
+    VOR;
+    HourText(ntp.hours() + 1);
+  }
+  else {
+    //00:55	Es ist fünf[0] vor xx+1
+    FUNF_1;
+    VOR;
+    HourText(ntp.hours() + 1);
+  }
+}
+
+/////////////////////////////////////
+// get Minutes
+void getMinutesText() {
+  minutesMask=0;
+  switch(ntp.minutes() % 5) {
+    case 1:
+      minutesMask = 1;
+      break;
+    case 2:
+      minutesMask = 2;
+      break;
+    case 3:
+      minutesMask = 4;
+      break;
+    case 4:
+      minutesMask = 8;
+      break;
+  }
+}
+
+/////////////////////////////////////
+// RGB Collor wheel
+RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep) {
+
+  float p = wheelsteps / 3.0;
+  float s = 255.0 / p; // stepsize
+
+  // 255,0,0 --> 0,255,0
+  if (curstep < p) {
+    return RgbwColor(255 - curstep * s, curstep * s, 0, 0);
+  }
+  // 0,255,0 --> 0,0,255
+  if (curstep < 2 * p) {
+    curstep -= p;
+    return RgbwColor(0, 255 - curstep * s, curstep * s, 0);
+  }
+  // 0,0,255 --> 255,0,0
+  curstep -= 2 * p;
+  return RgbwColor(curstep * s, 0, 255 - curstep * s, 0);
+}
+
+/////////////////////////////////////
+// Tests
+void PixelColorWheel(NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> *strip, uint8_t wait) {
+  for (uint16_t i = 0; i < strip->PixelCount(); i++) {
+    strip->SetPixelColor(i, colorWheel(strip->PixelCount(), i));
+    strip->Show();
+    delay(wait);
   }
 }

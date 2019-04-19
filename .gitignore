@@ -5,3 +5,5 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 include/WiFipwd.h
+.vscode/ipch/8b6d0489ec301cce/MAIN.ipch
+.vscode/ipch/8b6d0489ec301cce/mmap_address.bin
