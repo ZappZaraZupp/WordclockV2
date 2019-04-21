@@ -18,29 +18,24 @@ void setup() {
   pinMode(Sw8Pin,INPUT);
   pinMode(LDRPin,INPUT);
 
+  PanelStrip.Begin();
+  MinutesStrip.Begin();
+  //Test
   display.clear();
   display.drawString(0, 0, "Pixel Test ...");
   display.display();
-  PanelStrip.Begin();
-  PanelStrip.ClearTo(RgbwColor(0,0,0,255));
-  PanelStrip.Show();
-  MinutesStrip.Begin();
-  MinutesStrip.ClearTo(RgbwColor(0,0,0,255));
-  MinutesStrip.Show();
-
-  //Test
-  delay(1000);
   PixelColorWheel(&PanelStrip,10);
   PixelColorWheel(&MinutesStrip,100);
   //EndTest
 
   WiFi.begin(ssid, password);
 
+  display.clear();
   while ( WiFi.status() != WL_CONNECTED ) {
-    display.clear();
+    display.drawString(0, 0, "Connecting\n to\n Wifi ...");
     display.display();
     delay ( 300 );
-    display.drawString(0, 0, "Connecting\n to\n Wifi ...");
+    display.clear();
     display.display();
     delay ( 300 );
   }
@@ -130,7 +125,7 @@ void setPanelPixel() {
 }
 
 /////////////////////////////////////
-// set Pixels for OtherStrip from otherMask
+// set Pixels for MinutesStrip from minutesMask
 void setMinutesPixel() {
   uint8_t x=0;
   for (int j = 0; j <= 3; j++) { 
@@ -188,7 +183,7 @@ void HourText(uint8_t h) {
     case 11:
       ELF;
       break;
-    // specail cases
+    // special cases
     case 100:
       EIN;
       break;
@@ -296,13 +291,13 @@ void getMinutesText() {
       minutesMask = 1;
       break;
     case 2:
-      minutesMask = 2;
+      minutesMask = 3;
       break;
     case 3:
-      minutesMask = 4;
+      minutesMask = 7;
       break;
     case 4:
-      minutesMask = 8;
+      minutesMask = 15;
       break;
   }
 }

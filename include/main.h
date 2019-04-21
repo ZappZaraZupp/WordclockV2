@@ -36,7 +36,7 @@ NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount, Panel
 
 /////////////////////////////////////
 // Minutes LEDs (minutes 1-4, 8 touch keys)
-const uint16_t MinutesPixelCount = 12;
+const uint16_t MinutesPixelCount = 4;
 const uint8_t MinutesPixelPin = 19;
 NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> MinutesStrip(MinutesPixelCount, MinutesPixelPin);
 
