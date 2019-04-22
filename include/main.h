@@ -30,14 +30,14 @@ NTP ntp(ntpUDP);
 const uint8_t PanelWidth = 11;
 const uint8_t PanelHeight = 10;
 const uint16_t PanelPixelCount = PanelWidth * PanelHeight;
-const uint8_t PanelPixelPin = 18;
+const uint8_t PanelPixelPin = 19;
 NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
 NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount, PanelPixelPin);
 
 /////////////////////////////////////
 // Minutes LEDs (minutes 1-4, 8 touch keys)
 const uint16_t MinutesPixelCount = 4;
-const uint8_t MinutesPixelPin = 19;
+const uint8_t MinutesPixelPin = 18;
 NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> MinutesStrip(MinutesPixelCount, MinutesPixelPin);
 
 /////////////////////////////////////

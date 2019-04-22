@@ -17,6 +17,8 @@ void setup() {
   pinMode(Sw7Pin,INPUT);
   pinMode(Sw8Pin,INPUT);
   pinMode(LDRPin,INPUT);
+  pinMode(PanelPixelPin,OUTPUT);
+  pinMode(MinutesPixelPin,OUTPUT);
 
   PanelStrip.Begin();
   MinutesStrip.Begin();
@@ -92,7 +94,7 @@ void loop() {
 
     setPixels();
     PanelStrip.Show();
-    MinutesStrip.Show();
+    //MinutesStrip.Show();
 
     oldt = ntp.seconds();
   }
@@ -104,7 +106,7 @@ void setPixels() {
     getTimeText();
     getMinutesText();
     setPanelPixel();
-    setMinutesPixel();
+    //setMinutesPixel();
 }
 
 /////////////////////////////////////
@@ -124,7 +126,7 @@ void setPanelPixel() {
   }
 }
 
-/////////////////////////////////////
+/*/////////////////////////////////////
 // set Pixels for MinutesStrip from minutesMask
 void setMinutesPixel() {
   uint8_t x=0;
@@ -137,7 +139,7 @@ void setMinutesPixel() {
       MinutesStrip.SetPixelColor(j,RgbwColor(0,0,0,0));
     }
   }
-}
+}*/
 
 /////////////////////////////////////
 // hours text
