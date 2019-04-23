@@ -2,6 +2,12 @@
 
 void setup() {
 
+	Serial.begin(115200);
+
+	LOG("start");
+  	LOG(__DATE__);
+  	LOG(__TIME__);
+
 	display.init();
 	display.setFont(Monospaced_bold_10);
 	display.flipScreenVertically();
@@ -20,12 +26,16 @@ void setup() {
 	pinMode(PanelPixelPin, OUTPUT);
 
 	PanelStrip.Begin();
-	MinutesStrip.Begin();
+	
 	//Test
 	display.clear();
-	display.drawString(0, 0, "Pixel Test ...");
+	display.drawString(0, 0, "Char Test ...");
 	display.display();
-	PixelColorWheel(0, PanelPixelCount, 10);
+	PixelColorWheel(0, PanelPixelCount, 100);
+	delay(1000);
+	display.clear();
+	display.drawString(0, 0, "Minutes Test ...");
+	display.display();
 	PixelColorWheel(PanelPixelCount, PanelPixelCount + MinutesPixelCount, 100);
 	delay(1000);
 	PanelStrip.ClearTo(0);
@@ -117,8 +127,9 @@ void setPixels() {
 // set Pixels for PanelStrip from panelMask
 void setPanelPixel() {
 	uint8_t x = 0;
-	for (int i = 0; i <= 9; i++) { // row
-		for (int j = 0; j <= 15; j++) { // column
+	for (int i = 0; i < PanelHeight; i++) { // row
+		//LOG(String(i)+" : "+String(panelMask[i]));
+		for (int j = 0; j < PanelWidth; j++) { // column
 			x = bitRead(panelMask[i], 15 - j);
 			if (x == 1) {
 				PanelStrip.SetPixelColor(topo.Map(j, i), RgbwColor(255, 0, 0, 0));
@@ -134,13 +145,13 @@ void setPanelPixel() {
 // set Pixels for MinutesStrip from minutesMask
 void setMinutesPixel() {
 	uint8_t x = 0;
-	for (int j = 0; j <= 3; j++) {
-		x = bitRead(minutesMask, 8 - j);
+	for (uint8_t j = 0; j <= 3; j++) {
+		x = bitRead(minutesMask, j);
 		if (x == 1) {
 			PanelStrip.SetPixelColor(MinutesPixelStart+j, RgbwColor(255, 0, 0, 0));
 		}
 		else {
-			MinutesStrip.SetPixelColor(MinutesPixelStart+j, RgbwColor(0, 0, 0, 0));
+			PanelStrip.SetPixelColor(MinutesPixelStart+j, RgbwColor(0, 0, 0, 0));
 		}
 	}
 }
@@ -294,16 +305,16 @@ void getMinutesText() {
 	minutesMask = 0;
 	switch (ntp.minutes() % 5) {
 	case 1:
-		minutesMask = 1;
+		minutesMask = 1; // 0001
 		break;
 	case 2:
-		minutesMask = 3;
+		minutesMask = 3; // 0011
 		break;
 	case 3:
-		minutesMask = 7;
+		minutesMask = 7; // 0111
 		break;
 	case 4:
-		minutesMask = 15;
+		minutesMask = 15; // 1111
 		break;
 	}
 }
@@ -333,9 +344,9 @@ RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep) {
 // Tests
 void PixelColorWheel(uint8_t from, uint8_t to, uint8_t wait) {
 	// todo: check borders
-	for (uint8_t i = from; i < i < to; i++) {
-		PanelStrip.SetPixelColor(i, colorWheel(to-from, i));
-		panelStrip.Show();
+	for (uint8_t i = from;  i < to; i++) {
+		PanelStrip.SetPixelColor(i, colorWheel(to-from, i-from));
+		PanelStrip.Show();
 		delay(wait);
 	}
 }

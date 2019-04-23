@@ -1,15 +1,24 @@
 #ifndef H_MAIN
 #define H_MAIN
 
+#define LOG(arg) Serial.print("[");Serial.print((const char*)__FUNCTION__);Serial.print("] ");Serial.print(arg);Serial.print("\r\n");
+//#define LOG(arg) ;
+
 #include <Arduino.h>
 
+// https://github.com/ThingPulse/esp8266-oled-ssd1306
+// ESP8266 and ESP32 Oled Driver for SSD1306 display by Daniel Eichhorn
 #include <wire.h>
-#include "SSD1306.h"
+#include "SSD1306Wire.h"
 #include <wc_font.h>
 
+// NeoPixelBus by Michael Miller
+// https://github.com/Makuna/NeoPixelBus
 #include <NeoPixelBus.h>
-//#include <NeoPixelAnimator.h>
+#include <NeoPixelAnimator.h>
 
+// NTP by Stefan Staub
+// https://github.com/sstaub/NTP
 #include <NTP.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -17,7 +26,7 @@
 
 /////////////////////////////////////
 // The display
-SSD1306  display(0x3c, 21, 22);
+SSD1306Wire  display(0x3c, 21, 22);
 
 /////////////////////////////////////
 // in WiFipwd.h
@@ -28,19 +37,21 @@ WiFiUDP ntpUDP;
 NTP ntp(ntpUDP);
 
 /////////////////////////////////////
-// Char LEDs (Matrix)
-const uint8_t PanelWidth = 11;
-const uint8_t PanelHeight = 10;
+// LEDs
+// 1st: the character matrix
+// 2nd: the 4 minutes led
+//const uint8_t PanelWidth = 11;
+//const uint8_t PanelHeight = 10;
+const uint8_t PanelWidth = 3; //test mit 7 led
+const uint8_t PanelHeight = 1;
 const uint8_t PanelPixelCount = PanelWidth * PanelHeight;
 const uint8_t PanelPixelPin = 18;
+const uint8_t MinutesPixelCount = 4;
+const uint8_t MinutesPixelStart = PanelPixelCount;
 NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
-NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount, PanelPixelPin);
+NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount + MinutesPixelCount, PanelPixelPin);
 //NeoPixelAnimator PanelAnimation(PanelStrip.PixelCount(), NEO_CENTISECONDS);
 
-/////////////////////////////////////
-// Minutes LEDs (minutes 1-4)
-const uint8_t MinutesPixelStart = PanelPixelCount;
-const uint8_t MinutesPixelCount = 4;
 
 /////////////////////////////////////
 // brightness
