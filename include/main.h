@@ -2,11 +2,13 @@
 #define H_MAIN
 
 #include <Arduino.h>
+
 #include <wire.h>
 #include "SSD1306.h"
 #include <wc_font.h>
 
 #include <NeoPixelBus.h>
+//#include <NeoPixelAnimator.h>
 
 #include <NTP.h>
 #include <WiFi.h>
@@ -29,16 +31,16 @@ NTP ntp(ntpUDP);
 // Char LEDs (Matrix)
 const uint8_t PanelWidth = 11;
 const uint8_t PanelHeight = 10;
-const uint16_t PanelPixelCount = PanelWidth * PanelHeight;
+const uint8_t PanelPixelCount = PanelWidth * PanelHeight;
 const uint8_t PanelPixelPin = 18;
 NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
 NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount, PanelPixelPin);
+//NeoPixelAnimator PanelAnimation(PanelStrip.PixelCount(), NEO_CENTISECONDS);
 
 /////////////////////////////////////
-// Minutes LEDs (minutes 1-4, 8 touch keys)
-const uint16_t MinutesPixelCount = 4;
-const uint8_t MinutesPixelPin = 19;
-NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> MinutesStrip(MinutesPixelCount, MinutesPixelPin);
+// Minutes LEDs (minutes 1-4)
+const uint8_t MinutesPixelStart = PanelPixelCount;
+const uint8_t MinutesPixelCount = 4;
 
 /////////////////////////////////////
 // brightness
@@ -140,6 +142,6 @@ RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep);
 
 /////////////////////////////////////
 // Tests
-void PixelColorWheel(NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> *strip, uint8_t wait);
+void PixelColorWheel(uint8_t from, uint8_t to, uint8_t wait);
 
 #endif
