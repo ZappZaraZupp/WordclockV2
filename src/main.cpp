@@ -146,7 +146,7 @@ void setPanelPixel() {
 void setMinutesPixel() {
 	uint8_t x = 0;
 	for (uint8_t j = 0; j <= 3; j++) {
-		x = bitRead(minutesMask, j);
+		x = bitRead(minutesMask, 7-j);
 		if (x == 1) {
 			PanelStrip.SetPixelColor(MinutesPixelStart+j, RgbwColor(255, 0, 0, 0));
 		}
@@ -305,16 +305,20 @@ void getMinutesText() {
 	minutesMask = 0;
 	switch (ntp.minutes() % 5) {
 	case 1:
-		minutesMask = 1; // 0001
+		minutesMask = 0b10000000;
+		//minutesMask = 0b10000000;
 		break;
 	case 2:
-		minutesMask = 3; // 0011
+		minutesMask = 0b11000000;
+		//minutesMask = 0b01000000;
 		break;
 	case 3:
-		minutesMask = 7; // 0111
+		minutesMask = 0b11100000;
+		//minutesMask = 0b00100000;
 		break;
 	case 4:
-		minutesMask = 15; // 1111
+		minutesMask = 0b11110000;
+		//minutesMask = 0b00010000;
 		break;
 	}
 }
