@@ -45,13 +45,16 @@ void setup() {
 	WiFi.begin(ssid, password);
 
 	display.clear();
+	int breakout=20;
 	while (WiFi.status() != WL_CONNECTED) {
 		display.drawString(0, 0, "Connecting\n to\n Wifi ...");
+		display.drawString(80, 0, String(breakout));
 		display.display();
-		delay(300);
+		delay(500);
 		display.clear();
 		display.display();
-		delay(300);
+		delay(500);
+		if((breakout-=1)==0) {break;}
 	}
 
 	display.clear();
@@ -67,7 +70,7 @@ void setup() {
 void loop() {
 
 	if (ntp.seconds() != oldt) {
-		currentBright = (int)((4096.0 - analogRead(A0)) / 4096.0*255.0);
+		currentBright = minBrightness+ (maxBrightness - minBrightness) * (4096.0 - analogRead(A0)) / 4096.0;
 		ntp.update();
 
 		display.clear();
@@ -105,13 +108,16 @@ void loop() {
 		display.display();
 
 		setPixels();
-		// instead use UpdateAnimations() and Animator Object OUTSIDE the 1-second loop
-		PanelStrip.Show();
-
 		oldt = ntp.seconds();
 	}
-	//PanelAnimation.UpdateAnimations();
-	//PanelStrip.Show();;
+	if(PanelAnimation.IsAnimating()) {
+		PanelAnimation.UpdateAnimations();
+		PanelStrip.Show();
+	}
+	else {
+		SetupMinutesAnimation();
+		SetupPanelAnimation();
+	}
 }
 
 /////////////////////////////////////
@@ -119,41 +125,59 @@ void loop() {
 void setPixels() {
 	getTimeText();
 	getMinutesText();
-	setPanelPixel();
-	setMinutesPixel();
 }
 
 /////////////////////////////////////
-// set Pixels for PanelStrip from panelMask
-void setPanelPixel() {
+// 
+void SetupPanelAnimation() { // initialize AnimationState from getPixelColor and panelMask
 	uint8_t x = 0;
 	for (int i = 0; i < PanelHeight; i++) { // row
 		//LOG(String(i)+" : "+String(panelMask[i]));
 		for (int j = 0; j < PanelWidth; j++) { // column
 			x = bitRead(panelMask[i], 15 - j);
 			if (x == 1) {
-				PanelStrip.SetPixelColor(topo.Map(j, i), RgbwColor(255, 0, 0, 0));
+				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));
+				StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
 			}
 			else {
-				PanelStrip.SetPixelColor(topo.Map(j, i), RgbwColor(0, 0, 0, 0));
+				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));
+				StripState[topo.Map(j, i)].EndingColor = RgbwColor(0, 0, 0, 0);
+			}
+			// Start anim only, if pixel has changed
+			if(StripState[topo.Map(j, i)].StartingColor != StripState[topo.Map(j, i)].EndingColor) {
+				PanelAnimation.StartAnimation(topo.Map(j, i),50,FadeAnim);
 			}
 		}
 	}
 }
 
-//////////////////////////////////////
-// set Pixels for MinutesStrip from minutesMask
-void setMinutesPixel() {
+void SetupMinutesAnimation() { // initialize AnimationState from getPixelColor and minutesMask
 	uint8_t x = 0;
 	for (uint8_t j = 0; j <= 3; j++) {
 		x = bitRead(minutesMask, 7-j);
 		if (x == 1) {
-			PanelStrip.SetPixelColor(MinutesPixelStart+j, RgbwColor(255, 0, 0, 0));
+            StripState[MinutesPixelStart+j].StartingColor = PanelStrip.GetPixelColor(MinutesPixelStart+j);
+			StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
 		}
 		else {
-			PanelStrip.SetPixelColor(MinutesPixelStart+j, RgbwColor(0, 0, 0, 0));
+            StripState[MinutesPixelStart+j].StartingColor = PanelStrip.GetPixelColor(MinutesPixelStart+j);
+			StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0, 0, 0, 0);
 		}
+		// Start anim only, if pixel has changed
+        if(StripState[j].StartingColor != StripState[j].EndingColor) {
+            PanelAnimation.StartAnimation(MinutesPixelStart+j,50,FadeAnim);
+        }
 	}
+}
+
+void FadeAnim(AnimationParam param) {
+    //simple linear blend
+    RgbwColor updatedColor = RgbwColor::LinearBlend(
+        StripState[param.index].StartingColor,
+        StripState[param.index].EndingColor,
+        param.progress);
+    // apply the color to the strip
+    PanelStrip.SetPixelColor(param.index, updatedColor);
 }
 
 /////////////////////////////////////

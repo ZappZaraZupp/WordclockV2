@@ -40,25 +40,32 @@ NTP ntp(ntpUDP);
 // LEDs
 // 1st: the character matrix
 // 2nd: the 4 minutes led
-//const uint8_t PanelWidth = 11;
-//const uint8_t PanelHeight = 10;
-const uint8_t PanelWidth = 3; //test mit 7 led
-const uint8_t PanelHeight = 1;
+const uint8_t PanelWidth = 11;
+const uint8_t PanelHeight = 10;
+//const uint8_t PanelWidth = 7; //test mit 7 led
+//const uint8_t PanelHeight = 1;
 const uint8_t PanelPixelCount = PanelWidth * PanelHeight;
 const uint8_t PanelPixelPin = 18;
 const uint8_t MinutesPixelCount = 4;
 const uint8_t MinutesPixelStart = PanelPixelCount;
 NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
 NeoPixelBus <NeoGrbwFeature, Neo800KbpsMethod> PanelStrip(PanelPixelCount + MinutesPixelCount, PanelPixelPin);
-//NeoPixelAnimator PanelAnimation(PanelStrip.PixelCount(), NEO_CENTISECONDS);
+NeoPixelAnimator PanelAnimation(PanelPixelCount + MinutesPixelCount, NEO_CENTISECONDS);
 
+struct PanelAnimationState
+{
+    RgbwColor StartingColor;  // the color the animation starts at
+    RgbwColor EndingColor; // the color the animation will end at
+}; 
+
+PanelAnimationState StripState[PanelPixelCount + MinutesPixelCount];
 
 /////////////////////////////////////
-// brightness
+// brightness (value between 0..1)
 const uint8_t LDRPin = A0;
-uint8_t minBrightness = 10;
-uint8_t maxBrightness = 255;
-uint8_t currentBright = 0;
+float minBrightness = 20.0/4096.0;
+float maxBrightness = 1.0;
+float currentBright = 0.0;
 
 /////////////////////////////////////
 // switches
@@ -123,29 +130,34 @@ uint8_t minutesMask;
 #define NEUN            panelMask[9] |= 0b0001111000000000
 #define UHR             panelMask[9] |= 0b0000000011100000
 
+
 /////////////////////////////////////
-// set all Pixels
+// set all Masks for current time
 void setPixels(void);
-
-/////////////////////////////////////
-// set Pixels for PanelStrip from panelMask
-void setPanelPixel(void);
-
-/////////////////////////////////////
-// set Pixels for MinutesStrip from minutesMask
-void setMinutesPixel(void);
-
-/////////////////////////////////////
-// hours text
-void HourText(uint8_t h);
 
 /////////////////////////////////////
 // get time and set panelMask
 void getTimeText(void);
 
 /////////////////////////////////////
+// hours text
+void HourText(uint8_t h);
+
+/////////////////////////////////////
+// setup Pixelsanimation for PanelStrip from panelMask
+void SetupPanelAnimation();
+
+/////////////////////////////////////
 // get Minutes and set minutesMask
 void getMinutesText(void);
+
+/////////////////////////////////////
+// set Pixelsanmiation for MinutesStrip from minutesMask
+void SetupMinutesAnimation();
+
+/////////////////////////////////////
+// simple fading
+void FadeAnim(AnimationParam param); 
 
 /////////////////////////////////////
 // RGB Collor wheel
