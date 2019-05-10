@@ -10,7 +10,7 @@ void setup() {
 
 	display.init();
 	display.setFont(Monospaced_bold_10);
-	display.flipScreenVertically();
+	//display.flipScreenVertically();
 	display.clear();
 	display.display();
 
@@ -37,6 +37,24 @@ void setup() {
 	display.drawString(0, 0, "Minutes Test ...");
 	display.display();
 	PixelColorWheel(PanelPixelCount, PanelPixelCount + MinutesPixelCount, 100);
+	delay(1000);
+	display.clear();
+	display.drawString(0, 0, "All Colors Test ...");
+	display.display();
+	PanelStrip.ClearTo(RgbwColor(255,0,0,0));
+	PanelStrip.Show();
+	delay(1000);
+	PanelStrip.ClearTo(RgbwColor(0,255,0,0));
+	PanelStrip.Show();
+	delay(1000);
+	PanelStrip.ClearTo(RgbwColor(0,0,255,0));
+	PanelStrip.Show();
+	delay(1000);
+	PanelStrip.ClearTo(RgbwColor(0,0,0,255));
+	PanelStrip.Show();
+	delay(1000);
+	PanelStrip.ClearTo(RgbwColor(255,255,255,255));
+	PanelStrip.Show();
 	delay(1000);
 	PanelStrip.ClearTo(0);
 	PanelStrip.Show();
@@ -164,7 +182,7 @@ void SetupMinutesAnimation() { // initialize AnimationState from getPixelColor a
 			StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0, 0, 0, 0);
 		}
 		// Start anim only, if pixel has changed
-        if(StripState[j].StartingColor != StripState[j].EndingColor) {
+        if(StripState[MinutesPixelStart+j].StartingColor != StripState[MinutesPixelStart+j].EndingColor) {
             PanelAnimation.StartAnimation(MinutesPixelStart+j,50,FadeAnim);
         }
 	}
@@ -329,20 +347,20 @@ void getMinutesText() {
 	minutesMask = 0;
 	switch (ntp.minutes() % 5) {
 	case 1:
-		minutesMask = 0b10000000;
 		//minutesMask = 0b10000000;
+		minutesMask = 0b10000000;
 		break;
 	case 2:
-		minutesMask = 0b11000000;
-		//minutesMask = 0b01000000;
+		//minutesMask = 0b11000000;
+		minutesMask = 0b01000000;
 		break;
 	case 3:
-		minutesMask = 0b11100000;
-		//minutesMask = 0b00100000;
+		//minutesMask = 0b11100000;
+		minutesMask = 0b00100000;
 		break;
 	case 4:
-		minutesMask = 0b11110000;
-		//minutesMask = 0b00010000;
+		//minutesMask = 0b11110000;
+		minutesMask = 0b00010000;
 		break;
 	}
 }
