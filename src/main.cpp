@@ -2,26 +2,25 @@
 
 void setup() {
 
+	#ifdef DEV_BOARD
 	Serial.begin(115200);
-
+	#endif
 	LOG("start");
   	LOG(__DATE__);
   	LOG(__TIME__);
 
 	display.init();
 	display.setFont(Monospaced_bold_10);
-	//display.flipScreenVertically();
+	#ifdef DEV_BOARD
+	display.flipScreenVertically();
+	#endif
 	display.clear();
 	display.display();
 
-	pinMode(Sw1Pin, INPUT);
-	pinMode(Sw2Pin, INPUT);
-	pinMode(Sw3Pin, INPUT);
-	pinMode(Sw4Pin, INPUT);
-	pinMode(Sw5Pin, INPUT);
-	pinMode(Sw6Pin, INPUT);
-	pinMode(Sw7Pin, INPUT);
-	pinMode(Sw8Pin, INPUT);
+	for(uint8_t i=0;i<8;i++) {
+		pinMode(SwPin[i], INPUT);
+	}
+
 	pinMode(LDRPin, INPUT);
 	pinMode(PanelPixelPin, OUTPUT);
 
@@ -61,6 +60,7 @@ void setup() {
 	//EndTest
 
 	WiFi.begin(ssid, password);
+	WiFi.setSleep(false);
 
 	display.clear();
 	int breakout=20;
@@ -72,12 +72,13 @@ void setup() {
 		display.clear();
 		display.display();
 		delay(500);
-		if((breakout-=1)==0) {break;}
+		if((breakout-=1)==0) {
+			display.clear();
+			display.drawString(0, 0, "Wifi not connected");
+			display.display();
+			break;
+		}
 	}
-
-	display.clear();
-	display.drawString(0, 0, "Wifi Connected");
-	display.display();
 
 	ntp.ntpServer("192.168.42.99");
 	ntp.ruleDST("CEST", Last, Sun, Mar, 2, 120); // last sunday in march 2:00, timetone +120min (+1 GMT + 1h summertime offset)
@@ -87,47 +88,37 @@ void setup() {
 
 void loop() {
 
-	if (ntp.seconds() != oldt) {
-		currentBright = minBrightness+ (maxBrightness - minBrightness) * (4096.0 - analogRead(A0)) / 4096.0;
-		ntp.update();
+	currentBright = minBrightness + (maxBrightness - minBrightness) * (4096.0 - analogRead(A0)) / 4096.0;
 
-		display.clear();
-		//display.setFont(Monospaced_bold_28);
-		display.setFont(Monospaced_bold_16);
-		display.drawString(0, 0, ntp.formattedTime("%T"));
-		display.drawString(0, 20, ntp.formattedTime("%F"));
+	ntp.update();
 
-		display.setFont(Monospaced_bold_10);
-		display.drawString(0, 40, String(currentBright));
-		if (digitalRead(Sw1Pin)) {
-			display.drawString(0, 50, "1");
+	display.clear();
+	//display.setFont(Monospaced_bold_28);
+	display.setFont(Monospaced_bold_16);
+	display.drawString(0, 0, ntp.formattedTime("%T"));
+	display.drawString(0, 20, ntp.formattedTime("%F"));
+	display.setFont(Monospaced_bold_10);
+	//display.drawString(0, 40, String(currentBright));
+	
+	// Read Buttons (debounce)
+	for(uint8_t i=0; i<8; i++) {
+		if (digitalRead(SwPin[i])) {
+			display.drawString(8*i, 40, String(i));
+			debounceSw[i]+=1;
+			if( debounceSw[i] >= debunceCnt) {
+				//doButton(i);
+				display.drawString(8*i, 50, String(i));
+				debounceSw[i]=debunceCnt;
+			}
 		}
-		if (digitalRead(Sw2Pin)) {
-			display.drawString(10, 50, "2");
+		else {
+			debounceSw[i] = 0;
 		}
-		if (digitalRead(Sw3Pin)) {
-			display.drawString(20, 50, "3");
-		}
-		if (digitalRead(Sw4Pin)) {
-			display.drawString(30, 50, "4");
-		}
-		if (digitalRead(Sw5Pin)) {
-			display.drawString(40, 50, "5");
-		}
-		if (digitalRead(Sw6Pin)) {
-			display.drawString(50, 50, "6");
-		}
-		if (digitalRead(Sw7Pin)) {
-			display.drawString(60, 50, "7");
-		}
-		if (digitalRead(Sw8Pin)) {
-			display.drawString(70, 50, "8");
-		}
-		display.display();
-
-		setPixels();
-		oldt = ntp.seconds();
 	}
+	display.display();
+
+	setPixels();
+
 	if(PanelAnimation.IsAnimating()) {
 		PanelAnimation.UpdateAnimations();
 		PanelStrip.Show();

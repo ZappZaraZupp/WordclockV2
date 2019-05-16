@@ -1,8 +1,14 @@
 #ifndef H_MAIN
 #define H_MAIN
 
+#define DEV_BOARD
+// mac DEV BOARD 30:ae:a4:20:2d:b8
+
+#ifdef DEV_BOARD
 #define LOG(arg) Serial.print("[");Serial.print((const char*)__FUNCTION__);Serial.print("] ");Serial.print(arg);Serial.print("\r\n");
-//#define LOG(arg) ;
+#elif
+#define LOG(arg) ;
+#endif
 
 #include <Arduino.h>
 
@@ -40,12 +46,15 @@ NTP ntp(ntpUDP);
 // LEDs
 // 1st: the character matrix
 // 2nd: the 4 minutes led
+#ifdef DEV_BOARD
+const uint8_t PanelWidth = 7; //test mit 7 led
+const uint8_t PanelHeight = 1;
+#elif
 const uint8_t PanelWidth = 11;
 const uint8_t PanelHeight = 10;
-//const uint8_t PanelWidth = 7; //test mit 7 led
-//const uint8_t PanelHeight = 1;
+#endif
 const uint8_t PanelPixelCount = PanelWidth * PanelHeight;
-const uint8_t PanelPixelPin = 18;
+const uint8_t PanelPixelPin = 19;
 const uint8_t MinutesPixelCount = 4;
 const uint8_t MinutesPixelStart = PanelPixelCount;
 NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
@@ -63,20 +72,15 @@ PanelAnimationState StripState[PanelPixelCount + MinutesPixelCount];
 /////////////////////////////////////
 // brightness (value between 0..1)
 const uint8_t LDRPin = A0;
-float minBrightness = 20.0/4096.0;
-float maxBrightness = 1.0;
+const float minBrightness = 0.1;
+const float maxBrightness = 1.0;
 float currentBright = 0.0;
 
 /////////////////////////////////////
 // switches
-const uint8_t Sw1Pin = 12;
-const uint8_t Sw2Pin = 14;
-const uint8_t Sw3Pin = 27;
-const uint8_t Sw4Pin = 26;
-const uint8_t Sw5Pin = 25;
-const uint8_t Sw6Pin = 33;
-const uint8_t Sw7Pin = 32;
-const uint8_t Sw8Pin = 35;
+const uint8_t SwPin[] = {12,14,27,26,25,16,17,5};
+uint8_t debounceSw[] = {0,0,0,0,0,0,0,0};
+const uint8_t debunceCnt = 50; // Loop (not ms)
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh
