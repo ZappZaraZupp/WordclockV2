@@ -18,7 +18,7 @@ void setup() {
 	display.display();
 
 	for(uint8_t i=0;i<8;i++) {
-		pinMode(SwPin[i], INPUT);
+		pinMode(BtnPin[i], INPUT);
 	}
 
 	pinMode(LDRPin, INPUT);
@@ -102,23 +102,35 @@ void loop() {
 	
 	// Read Buttons (debounce)
 	for(uint8_t i=0; i<8; i++) {
-		if (digitalRead(SwPin[i])) {
+		if (digitalRead(BtnPin[i])) {
 			display.drawString(8*i, 40, String(i));
-			debounceSw[i]+=1;
-			if( debounceSw[i] >= debunceCnt) {
-				//doButton(i);
-				display.drawString(8*i, 50, String(i));
-				debounceSw[i]=debunceCnt;
+			debounceBtn[i]+=1;
+			if( debounceBtn[i] >= debunceCnt) {
+				if(BtnOn[i] <= 0) {
+					BtnOn[i] = 1; // button pressed
+				}
+				else {
+					BtnOn[i] = 2; // button was already on
+				}
+				debounceBtn[i]=debunceCnt;
 			}
 		}
 		else {
-			debounceSw[i] = 0;
+			if(BtnOn[i] > 0) {
+				BtnOn[i] = -1; // button released
+			}
+			else {
+				BtnOn[i] = 0; // button was already off
+			}
+			
+			debounceBtn[i] = 0;
 		}
 	}
+	doButtons();
 	display.display();
 
 	setPixels();
-
+	
 	if(PanelAnimation.IsAnimating()) {
 		PanelAnimation.UpdateAnimations();
 		PanelStrip.Show();
@@ -127,6 +139,19 @@ void loop() {
 		SetupMinutesAnimation();
 		SetupPanelAnimation();
 	}
+}
+
+/////////////////////////////////////
+// do something with the buttons
+void doButtons() {
+	if(BtnOn[0] == 1) {  // Only switch off -> on
+		ColorMode -= 1;
+	}
+	else if(BtnOn[1] == 1) {
+		ColorMode += 1;
+	}
+	ColorMode = ColorMode %5;
+	display.drawString(0, 50, String(ColorMode));
 }
 
 /////////////////////////////////////
@@ -146,7 +171,24 @@ void SetupPanelAnimation() { // initialize AnimationState from getPixelColor and
 			x = bitRead(panelMask[i], 15 - j);
 			if (x == 1) {
 				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));
-				StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
+				switch(ColorMode){
+					case 4:
+						StripState[topo.Map(j, i)].EndingColor = RgbwColor(255*currentBright, 0*currentBright, 0*currentBright, 0*currentBright);
+					break;
+					case 3:
+						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
+					break;
+					case 2:
+						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 255*currentBright, 0*currentBright);
+					break;
+					case 1:
+						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
+					break;
+					case 0:
+					default:
+						StripState[topo.Map(j, i)].EndingColor = colorWheel(PanelPixelCount,topo.Map(j, i));
+				}
+				
 			}
 			else {
 				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));

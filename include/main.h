@@ -78,9 +78,12 @@ float currentBright = 0.0;
 
 /////////////////////////////////////
 // switches
-const uint8_t SwPin[] = {12,14,27,26,25,16,17,5};
-uint8_t debounceSw[] = {0,0,0,0,0,0,0,0};
+const uint8_t BtnPin[] = {12,14,27,26,25,16,17,5}; // Pins of swiches
+int8_t BtnOn[] = {0,0,0,0,0,0,0,0}; // switch -1=on->off | 0=off | 1=of->on | 2=on
+uint8_t debounceBtn[] = {0,0,0,0,0,0,0,0}; // debounce counter
 const uint8_t debunceCnt = 50; // Loop (not ms)
+
+uint8_t ColorMode=0;
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh
@@ -134,6 +137,9 @@ uint8_t minutesMask;
 #define NEUN            panelMask[9] |= 0b0001111000000000
 #define UHR             panelMask[9] |= 0b0000000011100000
 
+/////////////////////////////////////
+// do something with the buttons
+void doButtons(void);
 
 /////////////////////////////////////
 // set all Masks for current time
