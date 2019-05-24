@@ -74,7 +74,7 @@ PanelAnimationState StripState[PanelPixelCount + MinutesPixelCount];
 const uint8_t LDRPin = A0;
 const float minBrightness = 0.1;
 const float maxBrightness = 1.0;
-float currentBright = 0.0;
+float currentBright = 1.0;
 
 /////////////////////////////////////
 // switches
@@ -83,7 +83,8 @@ int8_t BtnOn[] = {0,0,0,0,0,0,0,0}; // switch -1=on->off | 0=off | 1=of->on | 2=
 uint8_t debounceBtn[] = {0,0,0,0,0,0,0,0}; // debounce counter
 const uint8_t debunceCnt = 50; // Loop (not ms)
 
-uint8_t ColorMode=0;
+uint8_t PanelColorMode=0;
+uint8_t MinutesColorMode=0;
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh
@@ -171,7 +172,7 @@ void FadeAnim(AnimationParam param);
 
 /////////////////////////////////////
 // RGB Collor wheel
-RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep);
+RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright);
 
 /////////////////////////////////////
 // Tests

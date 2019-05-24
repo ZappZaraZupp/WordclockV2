@@ -145,13 +145,20 @@ void loop() {
 // do something with the buttons
 void doButtons() {
 	if(BtnOn[0] == 1) {  // Only switch off -> on
-		ColorMode -= 1;
+		PanelColorMode == 0 ? PanelColorMode=5: PanelColorMode -= 1;
 	}
 	else if(BtnOn[1] == 1) {
-		ColorMode += 1;
+		PanelColorMode == 5 ? PanelColorMode=0: PanelColorMode += 1;
 	}
-	ColorMode = ColorMode %5;
-	display.drawString(0, 50, String(ColorMode));
+	display.drawString(0, 50, String(PanelColorMode));
+
+	if(BtnOn[2] == 1) {  // Only switch off -> on
+		MinutesColorMode == 0 ? MinutesColorMode=5: MinutesColorMode -= 1;
+	}
+	else if(BtnOn[3] == 1) {
+		MinutesColorMode == 5 ? MinutesColorMode=0: MinutesColorMode += 1;
+	}
+	display.drawString(8, 50, String(MinutesColorMode));
 }
 
 /////////////////////////////////////
@@ -171,22 +178,25 @@ void SetupPanelAnimation() { // initialize AnimationState from getPixelColor and
 			x = bitRead(panelMask[i], 15 - j);
 			if (x == 1) {
 				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));
-				switch(ColorMode){
-					case 4:
+				switch(PanelColorMode){
+					case 5: //Colorwheel per minute
+						StripState[topo.Map(j, i)].EndingColor = colorWheel(60, ntp.seconds() ,currentBright);
+						break;
+					case 4: //Red
 						StripState[topo.Map(j, i)].EndingColor = RgbwColor(255*currentBright, 0*currentBright, 0*currentBright, 0*currentBright);
 					break;
-					case 3:
+					case 3: //Green
 						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
 					break;
-					case 2:
+					case 2: //Blue
 						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 255*currentBright, 0*currentBright);
 					break;
-					case 1:
+					case 1: //White
 						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
 					break;
-					case 0:
+					case 0: //ColorWheel over Pixel
 					default:
-						StripState[topo.Map(j, i)].EndingColor = colorWheel(PanelPixelCount,topo.Map(j, i));
+						StripState[topo.Map(j, i)].EndingColor = colorWheel(PanelPixelCount,topo.Map(j, i),currentBright);
 				}
 				
 			}
@@ -208,7 +218,26 @@ void SetupMinutesAnimation() { // initialize AnimationState from getPixelColor a
 		x = bitRead(minutesMask, 7-j);
 		if (x == 1) {
             StripState[MinutesPixelStart+j].StartingColor = PanelStrip.GetPixelColor(MinutesPixelStart+j);
-			StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
+			switch(MinutesColorMode){
+				case 5: //Colorwheel per minute
+					StripState[MinutesPixelStart+j].EndingColor = colorWheel(60, ntp.seconds() ,currentBright);
+				break;
+				case 4: //Red
+					StripState[MinutesPixelStart+j].EndingColor = RgbwColor(255*currentBright, 0*currentBright, 0*currentBright, 0*currentBright);
+				break;
+				case 3: //Green
+					StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
+				break;
+				case 2: //Blue
+					StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 255*currentBright, 0*currentBright);
+				break;
+				case 1: //White
+					StripState[MinutesPixelStart+j].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
+				break;
+				case 0: //ColorWheel over Pixel
+				default:
+					StripState[MinutesPixelStart+j].EndingColor = colorWheel(MinutesPixelCount,j,currentBright);
+			}
 		}
 		else {
             StripState[MinutesPixelStart+j].StartingColor = PanelStrip.GetPixelColor(MinutesPixelStart+j);
@@ -400,23 +429,23 @@ void getMinutesText() {
 
 /////////////////////////////////////
 // RGB Collor wheel
-RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep) {
+RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright) {
 
 	float p = wheelsteps / 3.0;
 	float s = 255.0 / p; // stepsize
 
 	// 255,0,0 --> 0,255,0
 	if (curstep < p) {
-		return RgbwColor(255 - curstep * s, curstep * s, 0, 0);
+		return RgbwColor((255 - curstep * s) * currentBright, curstep * s * currentBright, 0, 0);
 	}
 	// 0,255,0 --> 0,0,255
 	if (curstep < 2 * p) {
 		curstep -= p;
-		return RgbwColor(0, 255 - curstep * s, curstep * s, 0);
+		return RgbwColor(0, (255 - curstep * s) * currentBright, curstep * s * currentBright, 0);
 	}
 	// 0,0,255 --> 255,0,0
 	curstep -= 2 * p;
-	return RgbwColor(curstep * s, 0, 255 - curstep * s, 0);
+	return RgbwColor(curstep * s * currentBright, 0, (255 - curstep * s) * currentBright, 0);
 }
 
 /////////////////////////////////////
@@ -424,7 +453,7 @@ RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep) {
 void PixelColorWheel(uint8_t from, uint8_t to, uint8_t wait) {
 	// todo: check borders
 	for (uint8_t i = from;  i < to; i++) {
-		PanelStrip.SetPixelColor(i, colorWheel(to-from, i-from));
+		PanelStrip.SetPixelColor(i, colorWheel(to-from, i-from, 1.0));
 		PanelStrip.Show();
 		delay(wait);
 	}
