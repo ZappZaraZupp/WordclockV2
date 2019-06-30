@@ -41,6 +41,7 @@ SSD1306Wire  display(0x3c, 21, 22);
 ////
 WiFiUDP ntpUDP;
 NTP ntp(ntpUDP);
+const char* const PROGMEM dayNames[] = {"Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"};
 
 /////////////////////////////////////
 // LEDs
@@ -85,6 +86,7 @@ const uint8_t debunceCnt = 50; // Loop (not ms)
 
 uint8_t PanelColorMode=0;
 uint8_t MinutesColorMode=0;
+uint8_t DisplayMode=0;
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh
@@ -141,6 +143,10 @@ uint8_t minutesMask;
 /////////////////////////////////////
 // do something with the buttons
 void doButtons(void);
+
+/////////////////////////////////////
+// set display depending on mode
+void setDisplay(void); 
 
 /////////////////////////////////////
 // set all Masks for current time

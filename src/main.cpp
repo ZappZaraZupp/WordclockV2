@@ -92,18 +92,10 @@ void loop() {
 
 	ntp.update();
 
-	display.clear();
-	//display.setFont(Monospaced_bold_28);
-	display.setFont(Monospaced_bold_16);
-	display.drawString(0, 0, ntp.formattedTime("%T"));
-	display.drawString(0, 20, ntp.formattedTime("%F"));
-	display.setFont(Monospaced_bold_10);
-	//display.drawString(0, 40, String(currentBright));
-	
 	// Read Buttons (debounce)
 	for(uint8_t i=0; i<8; i++) {
 		if (digitalRead(BtnPin[i])) {
-			display.drawString(8*i, 40, String(i));
+			//display.drawString(8*i, 40, String(i));
 			debounceBtn[i]+=1;
 			if( debounceBtn[i] >= debunceCnt) {
 				if(BtnOn[i] <= 0) {
@@ -127,11 +119,11 @@ void loop() {
 		}
 	}
 	doButtons();
+	setDisplay();
 	display.display();
 
 	setPixels();
-	
-	if(PanelAnimation.IsAnimating()) {
+	if(PanelAnimation.IsAnimating()) { // todo: or  panel|minutes mask has changed
 		PanelAnimation.UpdateAnimations();
 		PanelStrip.Show();
 	}
@@ -150,15 +142,50 @@ void doButtons() {
 	else if(BtnOn[1] == 1) {
 		PanelColorMode == 5 ? PanelColorMode=0: PanelColorMode += 1;
 	}
-	display.drawString(0, 50, String(PanelColorMode));
-
+	
 	if(BtnOn[2] == 1) {  // Only switch off -> on
 		MinutesColorMode == 0 ? MinutesColorMode=5: MinutesColorMode -= 1;
 	}
 	else if(BtnOn[3] == 1) {
 		MinutesColorMode == 5 ? MinutesColorMode=0: MinutesColorMode += 1;
 	}
-	display.drawString(8, 50, String(MinutesColorMode));
+	
+	if(BtnOn[4] == 1) {  // Only switch off -> on
+		DisplayMode == 0 ? DisplayMode=3: DisplayMode -= 1;
+	}
+	else if(BtnOn[5] == 1) {
+		DisplayMode == 3 ? DisplayMode=0: DisplayMode += 1;
+	}
+}
+
+/////////////////////////////////////
+// set Display Text
+void setDisplay() {
+	switch(DisplayMode){
+		case 3: // empty display
+			display.clear();
+			break;
+		case 2: // only date
+			display.clear();
+			display.setTextAlignment(TEXT_ALIGN_CENTER);
+			display.setFont(Monospaced_bold_16);
+			display.drawString(64, 5, dayNames[ntp.weekDay()]);
+			display.drawString(64, 30, ntp.formattedTime("%d.%m.%Y"));
+			break;
+		case 1: // only seconds
+			display.clear();
+			display.setTextAlignment(TEXT_ALIGN_CENTER);
+			display.setFont(Monospaced_bold_50);
+			display.drawString(64, 5, ntp.formattedTime("%S"));
+			break;
+		case 0:
+		default: // time and date
+			display.clear();
+			display.setTextAlignment(TEXT_ALIGN_CENTER);
+			display.setFont(Monospaced_bold_16);
+			display.drawString(64, 5, ntp.formattedTime("%T"));
+			display.drawString(64, 30, ntp.formattedTime("%F"));
+	}
 }
 
 /////////////////////////////////////
