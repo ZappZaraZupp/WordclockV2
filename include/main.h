@@ -1,12 +1,12 @@
 #ifndef H_MAIN
 #define H_MAIN
 
-#define DEV_BOARD
+// #define DEV_BOARD
 // mac DEV BOARD 30:ae:a4:20:2d:b8
 
 #ifdef DEV_BOARD
 #define LOG(arg) Serial.print("[");Serial.print((const char*)__FUNCTION__);Serial.print("] ");Serial.print(arg);Serial.print("\r\n");
-#elif
+#else
 #define LOG(arg) ;
 #endif
 
@@ -50,12 +50,12 @@ const char* const PROGMEM dayNames[] = {"Sonntag", "Montag", "Dienstag", "Mittwo
 #ifdef DEV_BOARD
 const uint8_t PanelWidth = 7; //test mit 7 led
 const uint8_t PanelHeight = 1;
-#elif
+#else
 const uint8_t PanelWidth = 11;
 const uint8_t PanelHeight = 10;
 #endif
 const uint8_t PanelPixelCount = PanelWidth * PanelHeight;
-const uint8_t PanelPixelPin = 19;
+const uint8_t PanelPixelPin = 18;
 const uint8_t MinutesPixelCount = 4;
 const uint8_t MinutesPixelStart = PanelPixelCount;
 NeoTopology <RowMajorLayout> topo(PanelWidth, PanelHeight);
