@@ -79,14 +79,17 @@ float currentBright = 1.0;
 
 /////////////////////////////////////
 // switches
-const uint8_t BtnPin[] = {12,14,27,26,25,16,17,5}; // Pins of swiches
+const uint8_t BtnPin[] = {5,17,16,25,26,27,14,12}; // Pins of swiches
 int8_t BtnOn[] = {0,0,0,0,0,0,0,0}; // switch -1=on->off | 0=off | 1=of->on | 2=on
 uint8_t debounceBtn[] = {0,0,0,0,0,0,0,0}; // debounce counter
 const uint8_t debunceCnt = 50; // Loop (not ms)
 
 uint8_t PanelColorMode=0;
+//uint8_t PanelAnimMode=0 //todo
 uint8_t MinutesColorMode=0;
+uint8_t MinutesAnimMode=0; //0: light up all LED; 1: light up only one
 uint8_t DisplayMode=0;
+
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh

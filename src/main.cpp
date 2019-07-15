@@ -406,15 +406,15 @@ void getTimeText() {
 	else if (ntp.minutes() < 50) {
 		//00:45	Es ist viertel vor xx+1
 		//		Es ist dreiviertel xx+1
-		if ((int)random(2) == 0) {
+		//if ((int)random(2) == 0) {
 			VIERTEL;
 			VOR;
 			HourText(ntp.hours() + 1);
-		}
-		else {
-			DREIVIERTEL;
-			HourText(ntp.hours() + 1);
-		}
+		//}
+		//else {
+		//	DREIVIERTEL;
+		//	HourText(ntp.hours() + 1);
+		//}
 	}
 	else if (ntp.minutes() < 55) {
 		//00:50	Es ist zehn[1] vor xx+1
@@ -436,20 +436,36 @@ void getMinutesText() {
 	minutesMask = 0;
 	switch (ntp.minutes() % 5) {
 	case 1:
-		//minutesMask = 0b10000000;
-		minutesMask = 0b10000000;
+		if(MinutesAnimMode==0) {
+			minutesMask = 0b10000000;
+		}
+		else {
+			minutesMask = 0b10000000;
+		}
 		break;
 	case 2:
-		//minutesMask = 0b11000000;
-		minutesMask = 0b01000000;
+		if(MinutesAnimMode==0) {
+			minutesMask = 0b11000000;
+		}
+		else {
+			minutesMask = 0b01000000;
+		}
 		break;
 	case 3:
-		//minutesMask = 0b11100000;
-		minutesMask = 0b00100000;
+		if(MinutesAnimMode==0) {
+			minutesMask = 0b11100000;
+		}
+		else {
+			minutesMask = 0b00100000;
+		}
 		break;
 	case 4:
-		//minutesMask = 0b11110000;
-		minutesMask = 0b00010000;
+		if(MinutesAnimMode==0) {
+			minutesMask = 0b11110000;
+		}
+		else {
+			minutesMask = 0b00010000;
+		}
 		break;
 	}
 }
