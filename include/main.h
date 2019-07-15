@@ -73,7 +73,7 @@ PanelAnimationState StripState[PanelPixelCount + MinutesPixelCount];
 /////////////////////////////////////
 // brightness (value between 0..1)
 const uint8_t LDRPin = A0;
-const float minBrightness = 0.1;
+const float minBrightness = 0.02;
 const float maxBrightness = 1.0;
 float currentBright = 1.0;
 

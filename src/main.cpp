@@ -30,12 +30,12 @@ void setup() {
 	display.clear();
 	display.drawString(0, 0, "Char Test ...");
 	display.display();
-	PixelColorWheel(0, PanelPixelCount, 100);
+	PixelColorWheel(0, PanelPixelCount, 20);
 	delay(1000);
 	display.clear();
 	display.drawString(0, 0, "Minutes Test ...");
 	display.display();
-	PixelColorWheel(PanelPixelCount, PanelPixelCount + MinutesPixelCount, 100);
+	PixelColorWheel(PanelPixelCount, PanelPixelCount + MinutesPixelCount, 200);
 	delay(1000);
 	display.clear();
 	display.drawString(0, 0, "All Colors Test ...");
@@ -119,6 +119,7 @@ void loop() {
 		}
 	}
 	doButtons();
+	display.setBrightness((uint8_t)(255.0*currentBright));
 	setDisplay();
 	display.display();
 
