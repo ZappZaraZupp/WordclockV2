@@ -73,7 +73,7 @@ PanelAnimationState StripState[PanelPixelCount + MinutesPixelCount];
 /////////////////////////////////////
 // brightness (value between 0..1)
 const uint8_t LDRPin = A0;
-const float minBrightness = 0.02;
+const float minBrightness = 0.05;
 const float maxBrightness = 1.0;
 float currentBright = 1.0;
 
@@ -88,6 +88,8 @@ uint8_t PanelColorMode=0;
 //uint8_t PanelAnimMode=0 //todo
 uint8_t MinutesColorMode=0;
 uint8_t MinutesAnimMode=0; //0: light up all LED; 1: light up only one
+bool PanelColorModeDirty;
+bool MinutesColorModeDirty;
 uint8_t DisplayMode=0;
 
 
@@ -97,7 +99,13 @@ uint8_t oldt = 255; // store second value for refresh
 /////////////////////////////////////
 // 10*16-bit "panelMask" for each pixel (one variable is to small for 110 pixels)
 uint16_t panelMask[10];
+uint16_t oldPanelMask[10];
+bool panelDirty;
+/////////////////////////////////////
+// 4 byte "minutesMask"
 uint8_t minutesMask;
+uint8_t oldMinutesMask;
+bool minutesDirty;
 
 // ESKISTEFÜNF
 // ZEHNZWANZIG
@@ -180,8 +188,12 @@ void SetupMinutesAnimation();
 void FadeAnim(AnimationParam param); 
 
 /////////////////////////////////////
+// check if the mask has changed -> new animation
+bool MaskHasChanged();
+
+/////////////////////////////////////
 // RGB Collor wheel
-RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright);
+RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright,uint16_t offset);
 
 /////////////////////////////////////
 // Tests

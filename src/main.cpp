@@ -119,12 +119,13 @@ void loop() {
 		}
 	}
 	doButtons();
-	display.setBrightness((uint8_t)(255.0*currentBright));
+
 	setDisplay();
 	display.display();
 
 	setPixels();
-	if(PanelAnimation.IsAnimating()) { // todo: or  panel|minutes mask has changed
+
+	if(PanelAnimation.IsAnimating() && !(panelDirty || minutesDirty || PanelColorModeDirty || MinutesColorModeDirty)) { 
 		PanelAnimation.UpdateAnimations();
 		PanelStrip.Show();
 	}
@@ -137,18 +138,24 @@ void loop() {
 /////////////////////////////////////
 // do something with the buttons
 void doButtons() {
+	PanelColorModeDirty = false;
+	MinutesColorModeDirty = false;
 	if(BtnOn[0] == 1) {  // Only switch off -> on
 		PanelColorMode == 0 ? PanelColorMode=5: PanelColorMode -= 1;
+		PanelColorModeDirty = true;
 	}
 	else if(BtnOn[1] == 1) {
 		PanelColorMode == 5 ? PanelColorMode=0: PanelColorMode += 1;
+		PanelColorModeDirty = true;
 	}
 	
 	if(BtnOn[2] == 1) {  // Only switch off -> on
 		MinutesColorMode == 0 ? MinutesColorMode=5: MinutesColorMode -= 1;
+		MinutesColorModeDirty = true;
 	}
 	else if(BtnOn[3] == 1) {
 		MinutesColorMode == 5 ? MinutesColorMode=0: MinutesColorMode += 1;
+		MinutesColorModeDirty = true;
 	}
 	
 	if(BtnOn[4] == 1) {  // Only switch off -> on
@@ -166,13 +173,12 @@ void setDisplay() {
 		case 3: // empty display
 			display.clear();
 			break;
-		case 2: // only date
+		case 2: // time and date
 			display.clear();
 			display.setTextAlignment(TEXT_ALIGN_CENTER);
 			display.setFont(Monospaced_bold_16);
-			display.drawString(64, 5, dayNames[ntp.weekDay()]);
-			display.drawString(64, 30, ntp.formattedTime("%d.%m.%Y"));
-			break;
+			display.drawString(64, 5, ntp.formattedTime("%T"));
+			display.drawString(64, 30, ntp.formattedTime("%F"));
 		case 1: // only seconds
 			display.clear();
 			display.setTextAlignment(TEXT_ALIGN_CENTER);
@@ -180,13 +186,18 @@ void setDisplay() {
 			display.drawString(64, 5, ntp.formattedTime("%S"));
 			break;
 		case 0:
-		default: // time and date
+		default: // weekday, date, seconds progress bar
 			display.clear();
 			display.setTextAlignment(TEXT_ALIGN_CENTER);
 			display.setFont(Monospaced_bold_16);
-			display.drawString(64, 5, ntp.formattedTime("%T"));
-			display.drawString(64, 30, ntp.formattedTime("%F"));
+			display.drawString(64, 3, dayNames[ntp.weekDay()]);
+			display.drawString(64, 25, ntp.formattedTime("%d.%m.%Y"));
+			display.drawRect(3,45,121,4);
+			display.drawHorizontalLine(4,46,ntp.seconds()*2);
+			display.drawHorizontalLine(4,47,ntp.seconds()*2);
+			break;
 	}
+	display.setBrightness((uint8_t)(255.0*currentBright));
 }
 
 /////////////////////////////////////
@@ -200,6 +211,7 @@ void setPixels() {
 // 
 void SetupPanelAnimation() { // initialize AnimationState from getPixelColor and panelMask
 	uint8_t x = 0;
+	RgbwColor newColor;
 	for (int i = 0; i < PanelHeight; i++) { // row
 		//LOG(String(i)+" : "+String(panelMask[i]));
 		for (int j = 0; j < PanelWidth; j++) { // column
@@ -208,25 +220,25 @@ void SetupPanelAnimation() { // initialize AnimationState from getPixelColor and
 				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));
 				switch(PanelColorMode){
 					case 5: //Colorwheel per minute
-						StripState[topo.Map(j, i)].EndingColor = colorWheel(60, ntp.seconds() ,currentBright);
+						newColor = colorWheel(60, ntp.seconds() ,currentBright,0);
 						break;
 					case 4: //Red
-						StripState[topo.Map(j, i)].EndingColor = RgbwColor(255*currentBright, 0*currentBright, 0*currentBright, 0*currentBright);
+						newColor = RgbwColor(255*currentBright, 0*currentBright, 0*currentBright, 0*currentBright);
 					break;
 					case 3: //Green
-						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
+						newColor = RgbwColor(0*currentBright, 255*currentBright, 0*currentBright, 0*currentBright);
 					break;
 					case 2: //Blue
-						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 255*currentBright, 0*currentBright);
+						newColor = RgbwColor(0*currentBright, 0*currentBright, 255*currentBright, 0*currentBright);
 					break;
 					case 1: //White
-						StripState[topo.Map(j, i)].EndingColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
+						newColor = RgbwColor(0*currentBright, 0*currentBright, 0*currentBright, 255*currentBright);
 					break;
-					case 0: //ColorWheel over Pixel
+					case 0: //ColorWheel over Pixel circle per hour
 					default:
-						StripState[topo.Map(j, i)].EndingColor = colorWheel(PanelPixelCount,topo.Map(j, i),currentBright);
+						newColor =  colorWheel(PanelPixelCount,topo.Map(j, i),currentBright,(uint16_t)(PanelPixelCount*ntp.minutes()/60.0));
 				}
-				
+				StripState[topo.Map(j, i)].EndingColor = newColor;
 			}
 			else {
 				StripState[topo.Map(j, i)].StartingColor = PanelStrip.GetPixelColor(topo.Map(j, i));
@@ -248,7 +260,7 @@ void SetupMinutesAnimation() { // initialize AnimationState from getPixelColor a
             StripState[MinutesPixelStart+j].StartingColor = PanelStrip.GetPixelColor(MinutesPixelStart+j);
 			switch(MinutesColorMode){
 				case 5: //Colorwheel per minute
-					StripState[MinutesPixelStart+j].EndingColor = colorWheel(60, ntp.seconds() ,currentBright);
+					StripState[MinutesPixelStart+j].EndingColor = colorWheel(60, ntp.seconds() ,currentBright,0);
 				break;
 				case 4: //Red
 					StripState[MinutesPixelStart+j].EndingColor = RgbwColor(255*currentBright, 0*currentBright, 0*currentBright, 0*currentBright);
@@ -264,7 +276,7 @@ void SetupMinutesAnimation() { // initialize AnimationState from getPixelColor a
 				break;
 				case 0: //ColorWheel over Pixel
 				default:
-					StripState[MinutesPixelStart+j].EndingColor = colorWheel(MinutesPixelCount,j,currentBright);
+					StripState[MinutesPixelStart+j].EndingColor = colorWheel(MinutesPixelCount,j,currentBright,(uint16_t)(MinutesPixelCount*ntp.minutes()/60.0));
 			}
 		}
 		else {
@@ -343,7 +355,9 @@ void HourText(uint8_t h) {
 // get time and set panelMask
 void getTimeText() {
 	// panelMask-lines reset
+	// store old value
 	for (uint8_t i = 0; i < 10; i++) {
+		oldPanelMask[i] = panelMask[i];
 		panelMask[i] = 0;
 	}
 
@@ -352,7 +366,7 @@ void getTimeText() {
 	IST_1;
 
 	if (ntp.minutes() < 5) {
-		HourText(ntp.hours() == 1 ? 100 : ntp.hours()); // "Es ist Ein Uhr" (nicht: "Es ist Eins Uhr" ;-)
+		HourText((ntp.hours() % 12) == 1 ? 100 : ntp.hours()); // "Es ist Ein Uhr" (nicht: "Es ist Eins Uhr" ;-)
 		UHR;
 	}
 	else if (ntp.minutes() < 10) {
@@ -429,11 +443,17 @@ void getTimeText() {
 		VOR;
 		HourText(ntp.hours() + 1);
 	}
+	// check if something has changed
+	panelDirty = false;
+	for (uint8_t i = 0; i < 10; i++) {
+		if(oldPanelMask[i] != panelMask[i]) {panelDirty = true;}
+	}
 }
 
 /////////////////////////////////////
 // get Minutes
 void getMinutesText() {
+	oldMinutesMask = minutesMask;
 	minutesMask = 0;
 	switch (ntp.minutes() % 5) {
 	case 1:
@@ -469,14 +489,18 @@ void getMinutesText() {
 		}
 		break;
 	}
+	// check if something has changed
+	minutesDirty = false;
+	if(oldMinutesMask != minutesMask) {minutesDirty = true;}
 }
 
 /////////////////////////////////////
 // RGB Collor wheel
-RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright) {
+RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright, uint16_t offset) {
 
 	float p = wheelsteps / 3.0;
 	float s = 255.0 / p; // stepsize
+	curstep = (uint16_t)(curstep + offset * s) % wheelsteps;
 
 	// 255,0,0 --> 0,255,0
 	if (curstep < p) {
@@ -497,7 +521,7 @@ RgbwColor colorWheel(uint16_t wheelsteps, uint16_t curstep, float currentBright)
 void PixelColorWheel(uint8_t from, uint8_t to, uint8_t wait) {
 	// todo: check borders
 	for (uint8_t i = from;  i < to; i++) {
-		PanelStrip.SetPixelColor(i, colorWheel(to-from, i-from, 1.0));
+		PanelStrip.SetPixelColor(i, colorWheel(to-from, i-from, 1.0,0));
 		PanelStrip.Show();
 		delay(wait);
 	}
