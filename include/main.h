@@ -82,7 +82,7 @@ float currentBright = 1.0;
 const uint8_t BtnPin[] = {5,17,16,25,26,27,14,12}; // Pins of swiches
 int8_t BtnOn[] = {0,0,0,0,0,0,0,0}; // switch -1=on->off | 0=off | 1=of->on | 2=on
 uint8_t debounceBtn[] = {0,0,0,0,0,0,0,0}; // debounce counter
-const uint8_t debunceCnt = 50; // Loop (not ms)
+const uint8_t debounceCnt = 50; // Loop (not ms)
 
 uint8_t PanelColorMode=0;
 //uint8_t PanelAnimMode=0 //todo
@@ -93,7 +93,7 @@ bool MinutesColorModeDirty;
 uint8_t DisplayMode=0;
 String message;
 time_t messageTimer;
-const uint8_t DspMsgTime=10;
+const uint8_t DspMsgTime=5; //display message x seconds
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh

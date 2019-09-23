@@ -94,14 +94,14 @@ void loop() {
 		if (digitalRead(BtnPin[i])) {
 			//display.drawString(8*i, 40, String(i));
 			debounceBtn[i]+=1;
-			if( debounceBtn[i] >= debunceCnt) {
+			if( debounceBtn[i] >= debounceCnt) {
 				if(BtnOn[i] <= 0) {
 					BtnOn[i] = 1; // button pressed
 				}
 				else {
 					BtnOn[i] = 2; // button was already on
 				}
-				debounceBtn[i]=debunceCnt;
+				debounceBtn[i]=debounceCnt;
 			}
 		}
 		else {
@@ -140,28 +140,38 @@ void doButtons() {
 	if(BtnOn[0] == 1) {  // Only switch off -> on
 		PanelColorMode == 0 ? PanelColorMode=5: PanelColorMode -= 1;
 		PanelColorModeDirty = true;
-		message = String("lalala");
+		message = String("PanelColorMode\n" + String(PanelColorMode));
 		messageTimer = ntp.epoch();
 	}
 	else if(BtnOn[1] == 1) {
 		PanelColorMode == 5 ? PanelColorMode=0: PanelColorMode += 1;
 		PanelColorModeDirty = true;
+		message = String("PanelColorMode\n" + String(PanelColorMode));
+		messageTimer = ntp.epoch();
 	}
 	
 	if(BtnOn[2] == 1) {  // Only switch off -> on
 		MinutesColorMode == 0 ? MinutesColorMode=5: MinutesColorMode -= 1;
 		MinutesColorModeDirty = true;
+		message = String("MinutesColorMode\n" + String(MinutesColorMode));
+		messageTimer = ntp.epoch();
 	}
 	else if(BtnOn[3] == 1) {
 		MinutesColorMode == 5 ? MinutesColorMode=0: MinutesColorMode += 1;
 		MinutesColorModeDirty = true;
+		message = String("MinutesColorMode\n" + String(MinutesColorMode));
+		messageTimer = ntp.epoch();
 	}
 	
 	if(BtnOn[4] == 1) {  // Only switch off -> on
 		DisplayMode == 0 ? DisplayMode=3: DisplayMode -= 1;
+		message = String("DisplayMode\n" + String(DisplayMode));
+		messageTimer = ntp.epoch();
 	}
 	else if(BtnOn[5] == 1) {
 		DisplayMode == 3 ? DisplayMode=0: DisplayMode += 1;
+		message = String("DisplayMode\n" + String(DisplayMode));
+		messageTimer = ntp.epoch();
 	}
 }
 
@@ -171,11 +181,13 @@ void setDisplay() {
 	// display message DispMsgTime Time
 	// message timer is set when a message is set
 	if (message != "" && ntp.epoch()-messageTimer < DspMsgTime) {
+		display.setFont(Monospaced_bold_10);
 		display.clear();
+		display.setTextAlignment(TEXT_ALIGN_CENTER);
 		display.drawString(64, 5, message);
 	}
 	else {
-	// reset message and normal display
+		// reset message and normal display
 		message = String("");
 	switch(DisplayMode){
 		case 3: // empty display
@@ -187,6 +199,7 @@ void setDisplay() {
 			display.setFont(Monospaced_bold_16);
 			display.drawString(64, 5, ntp.formattedTime("%T"));
 			display.drawString(64, 30, ntp.formattedTime("%F"));
+			break;
 		case 1: // only seconds
 			display.clear();
 			display.setTextAlignment(TEXT_ALIGN_CENTER);
