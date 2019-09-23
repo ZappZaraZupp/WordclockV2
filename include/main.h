@@ -1,7 +1,7 @@
 #ifndef H_MAIN
 #define H_MAIN
 
-// #define DEV_BOARD
+#define DEV_BOARD
 // mac DEV BOARD 30:ae:a4:20:2d:b8
 
 #ifdef DEV_BOARD
@@ -91,7 +91,9 @@ uint8_t MinutesAnimMode=0; //0: light up all LED; 1: light up only one
 bool PanelColorModeDirty;
 bool MinutesColorModeDirty;
 uint8_t DisplayMode=0;
-
+String message;
+time_t messageTimer;
+const uint8_t DspMsgTime=10;
 
 /////////////////////////////////////
 uint8_t oldt = 255; // store second value for refresh

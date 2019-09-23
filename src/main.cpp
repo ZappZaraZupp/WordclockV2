@@ -11,9 +11,6 @@ void setup() {
 
 	display.init();
 	display.setFont(Monospaced_bold_10);
-	#ifdef DEV_BOARD
-	display.flipScreenVertically();
-	#endif
 	display.clear();
 	display.display();
 
@@ -87,10 +84,10 @@ void setup() {
 }
 
 void loop() {
+	//todo:check wifi
+	ntp.update();
 
 	currentBright = minBrightness + (maxBrightness - minBrightness) * (4096.0 - analogRead(A0)) / 4096.0;
-
-	ntp.update();
 
 	// Read Buttons (debounce)
 	for(uint8_t i=0; i<8; i++) {
@@ -143,6 +140,8 @@ void doButtons() {
 	if(BtnOn[0] == 1) {  // Only switch off -> on
 		PanelColorMode == 0 ? PanelColorMode=5: PanelColorMode -= 1;
 		PanelColorModeDirty = true;
+		message = String("lalala");
+		messageTimer = ntp.epoch();
 	}
 	else if(BtnOn[1] == 1) {
 		PanelColorMode == 5 ? PanelColorMode=0: PanelColorMode += 1;
@@ -169,6 +168,15 @@ void doButtons() {
 /////////////////////////////////////
 // set Display Text
 void setDisplay() {
+	// display message DispMsgTime Time
+	// message timer is set when a message is set
+	if (message != "" && ntp.epoch()-messageTimer < DspMsgTime) {
+		display.clear();
+		display.drawString(64, 5, message);
+	}
+	else {
+	// reset message and normal display
+		message = String("");
 	switch(DisplayMode){
 		case 3: // empty display
 			display.clear();
@@ -196,6 +204,7 @@ void setDisplay() {
 			display.drawHorizontalLine(4,46,ntp.seconds()*2);
 			display.drawHorizontalLine(4,47,ntp.seconds()*2);
 			break;
+	}
 	}
 	display.setBrightness((uint8_t)(255.0*currentBright));
 }

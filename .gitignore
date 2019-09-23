@@ -3,3 +3,4 @@
 .piolibdeps
 .vscode
 include/WiFipwd.h
+platformio.ini
