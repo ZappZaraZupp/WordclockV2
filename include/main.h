@@ -154,6 +154,10 @@ bool minutesDirty;
 #define UHR             panelMask[9] |= 0b0000000011100000
 
 /////////////////////////////////////
+// check wifi connection
+void checkWifi(void);
+
+/////////////////////////////////////
 // do something with the buttons
 void doButtons(void);
 

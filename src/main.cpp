@@ -12,6 +12,7 @@ void setup() {
 	display.init();
 	display.setFont(Monospaced_bold_10);
 	display.clear();
+	display.drawString(0, 0, "Wordclock V2");
 	display.display();
 
 	for(uint8_t i=0;i<8;i++) {
@@ -22,69 +23,45 @@ void setup() {
 	pinMode(PanelPixelPin, OUTPUT);
 
 	PanelStrip.Begin();
-	
+
+	// Start Wifi
+	WiFi.begin(ssid, password);
+	WiFi.setSleep(false);
+
 	//Test
 	display.clear();
-	display.drawString(0, 0, "Char Test ...");
-	display.display();
-	PixelColorWheel(0, PanelPixelCount, 20);
-	delay(1000);
-	display.clear();
-	display.drawString(0, 0, "Minutes Test ...");
-	display.display();
-	PixelColorWheel(PanelPixelCount, PanelPixelCount + MinutesPixelCount, 200);
-	delay(1000);
-	display.clear();
-	display.drawString(0, 0, "All Colors Test ...");
+	display.drawString(0, 0, "LED Test");
 	display.display();
 	PanelStrip.ClearTo(RgbwColor(255,0,0,0));
 	PanelStrip.Show();
-	delay(1000);
+	delay(500);
 	PanelStrip.ClearTo(RgbwColor(0,255,0,0));
 	PanelStrip.Show();
-	delay(1000);
+	delay(500);
 	PanelStrip.ClearTo(RgbwColor(0,0,255,0));
 	PanelStrip.Show();
-	delay(1000);
+	delay(500);
 	PanelStrip.ClearTo(RgbwColor(0,0,0,255));
 	PanelStrip.Show();
-	delay(1000);
+	delay(500);
 	PanelStrip.ClearTo(RgbwColor(255,255,255,255));
 	PanelStrip.Show();
-	delay(1000);
+	delay(500);
 	PanelStrip.ClearTo(0);
 	PanelStrip.Show();
 	//EndTest
 
-	WiFi.begin(ssid, password);
-	WiFi.setSleep(false);
-
-	display.clear();
-	int breakout=20;
-	while (WiFi.status() != WL_CONNECTED) {
-		display.drawString(0, 0, "Connecting\n to\n Wifi ...");
-		display.drawString(80, 0, String(breakout));
-		display.display();
-		delay(500);
-		display.clear();
-		display.display();
-		delay(500);
-		if((breakout-=1)==0) {
-			display.clear();
-			display.drawString(0, 0, "Wifi not connected");
-			display.display();
-			break;
-		}
-	}
-
+    checkWifi();
+	
 	ntp.ntpServer("192.168.42.99");
+	ntp.updateInterval(60000);
 	ntp.ruleDST("CEST", Last, Sun, Mar, 2, 120); // last sunday in march 2:00, timetone +120min (+1 GMT + 1h summertime offset)
 	ntp.ruleSTD("CET", Last, Sun, Oct, 3, 60); // last sunday in october 3:00, timezone +60min (+1 GMT)
 	ntp.begin();
 }
 
 void loop() {
-	//todo:check wifi
+	checkWifi();
 	ntp.update();
 
 	currentBright = minBrightness + (maxBrightness - minBrightness) * (4096.0 - analogRead(A0)) / 4096.0;
@@ -130,6 +107,41 @@ void loop() {
 		SetupMinutesAnimation();
 		SetupPanelAnimation();
 	}
+}
+
+/////////////////////////////////////
+// check wifi connection
+void checkWifi() {
+
+	if(WiFi.status() == WL_CONNECTED) { // wifi is connected, nothing to do
+		return;
+	}
+
+	display.clear();
+	display.setFont(Monospaced_bold_10);
+	display.clear();
+	display.setTextAlignment(TEXT_ALIGN_CENTER);
+	display.drawString(64, 5, "Connecting to Wifi ...");
+    
+	WiFi.disconnect();
+    WiFi.mode(WIFI_OFF);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+
+	int breakout=20;
+	while (WiFi.status() != WL_CONNECTED) {
+		display.drawString(64, 20, String(breakout));
+		delay(500);
+		if((breakout-=1)==0) {
+			display.clear();
+			display.drawString(0, 0, "Could not connect\nto Wifi");
+			display.display();
+			break;
+		}
+	}
+
+	message = String("Wifi not connected\ntry again.");
+	messageTimer = ntp.epoch();
 }
 
 /////////////////////////////////////
