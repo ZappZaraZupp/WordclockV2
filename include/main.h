@@ -1,7 +1,7 @@
 #ifndef H_MAIN
 #define H_MAIN
 
-#define DEV_BOARD
+// #define DEV_BOARD
 // mac DEV BOARD 30:ae:a4:20:2d:b8
 
 #ifdef DEV_BOARD
